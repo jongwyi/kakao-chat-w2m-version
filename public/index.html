@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WHEN2READ 챗봇</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: #8a9ba8;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .phone {
+      width: 390px;
+      height: 846px;
+      background: #afc1cf;
+      border-radius: 44px;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Status Bar */
+    .status-bar {
+      height: 44px;
+      background: #afc1cf;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      flex-shrink: 0;
+    }
+    .status-time {
+      font-size: 15px;
+      font-weight: 600;
+      color: #000;
+    }
+    .status-icons {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-icons svg { fill: #000; }
+
+    /* Chat Header */
+    .chat-header {
+      height: 56px;
+      background: #afc1cf;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+      flex-shrink: 0;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+    }
+    .header-back {
+      width: 13px;
+      height: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+    .header-title {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .bot-avatar-small {
+      width: 34px;
+      height: 34px;
+      background: #000;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 12px;
+    }
+    .header-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #000;
+    }
+    .header-count {
+      font-size: 13px;
+      color: #666;
+    }
+    .header-icons {
+      display: flex;
+      gap: 16px;
+    }
+
+    /* Chat Body */
+    .chat-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .chat-body::-webkit-scrollbar { display: none; }
+
+    /* Bot Message */
+    .bot-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .bot-avatar {
+      width: 41px;
+      height: 41px;
+      background: #000;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .bot-avatar span {
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .bot-bubble-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .bot-name {
+      font-size: 12px;
+      color: #333;
+      font-weight: 500;
+    }
+    .bot-bubble {
+      background: linear-gradient(135deg, #d8f997 0%, #e7eae0 100%);
+      border-radius: 0 12px 12px 12px;
+      padding: 10px 14px;
+      max-width: 254px;
+      font-size: 14px;
+      color: #000;
+      line-height: 1.5;
+    }
+
+    /* Calendar Widget */
+    .calendar-widget {
+      background: linear-gradient(145deg, #d8f997 0%, #e7eae0 100%);
+      border-radius: 20px;
+      padding: 16px;
+      width: 286px;
+      margin-left: 49px;
+    }
+
+    .calendar-inner {
+      background: #fff;
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .cal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .cal-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #000;
+    }
+    .cal-nav {
+      background: none;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      color: #000;
+      padding: 0 6px;
+      line-height: 1;
+    }
+
+    .cal-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      margin-bottom: 4px;
+    }
+    .cal-wd {
+      text-align: center;
+      font-size: 12px;
+      color: #a6a6a6;
+      padding: 4px 0;
+    }
+    .cal-wd:first-child { color: #e85c5c; }
+    .cal-wd:last-child { color: #5c7fe8; }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+    }
+    .cal-day {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      cursor: pointer;
+      border-radius: 50%;
+      transition: background 0.15s, color 0.15s;
+      color: #000;
+      user-select: none;
+    }
+    .cal-day.other-month {
+      color: #a6a6a6;
+      cursor: default;
+    }
+    .cal-day.selected {
+      background: #000;
+      color: #fff;
+    }
+    .cal-day:not(.other-month):not(.selected):hover {
+      background: rgba(0,0,0,0.08);
+    }
+    .cal-day.today {
+      font-weight: 700;
+    }
+
+    .confirm-btn {
+      display: block;
+      width: 100%;
+      margin-top: 12px;
+      padding: 10px;
+      background: #000;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      background: linear-gradient(90deg, #90ff1a, #fffa9f);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      background-color: #000;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      letter-spacing: 0.3px;
+    }
+
+    /* Selected count badge */
+    .selected-count {
+      font-size: 11px;
+      color: #555;
+      text-align: center;
+      margin-top: 6px;
+    }
+
+    /* Input Area */
+    .input-area {
+      height: 84px;
+      background: #fff;
+      border-top: 1px solid #e0e0e0;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .input-icon {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .input-box {
+      flex: 1;
+      height: 36px;
+      border: 1px solid #e0e0e0;
+      border-radius: 18px;
+      padding: 0 14px;
+      font-size: 14px;
+      color: #222;
+      outline: none;
+      font-family: inherit;
+    }
+    .input-box::placeholder { color: #999; }
+    .send-btn {
+      width: 32px;
+      height: 32px;
+      background: #000;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .send-btn svg { fill: #fff; }
+
+    /* 사용자 말풍선 */
+    .user-row {
+      display: flex;
+      justify-content: flex-end;
+    }
+    .user-bubble {
+      background: #fee500;
+      border-radius: 12px 0 12px 12px;
+      padding: 10px 14px;
+      max-width: 230px;
+      font-size: 14px;
+      color: #000;
+      line-height: 1.5;
+    }
+
+    /* 로딩 애니메이션 */
+    .typing-dots span {
+      display: inline-block;
+      width: 6px; height: 6px;
+      background: #666;
+      border-radius: 50%;
+      margin: 0 2px;
+      animation: bounce 1.2s infinite;
+    }
+    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-6px); }
+    }
+
+    /* 방 생성 팝업 모달 */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .modal-overlay.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .modal-sheet {
+      background: #fff;
+      border-radius: 20px 20px 0 0;
+      padding: 24px 20px 36px;
+      width: 100%;
+      max-width: 390px;
+      transform: translateY(30px);
+      transition: transform 0.25s cubic-bezier(.4,0,.2,1);
+    }
+    .modal-overlay.show .modal-sheet {
+      transform: translateY(0);
+    }
+    .modal-handle {
+      width: 40px; height: 4px;
+      background: #ddd; border-radius: 2px;
+      margin: 0 auto 18px;
+    }
+    .modal-title {
+      font-size: 16px; font-weight: 700;
+      text-align: center; margin-bottom: 8px;
+    }
+    .modal-dates {
+      font-size: 13px; color: #555;
+      text-align: center; line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .modal-btn-row {
+      display: flex; gap: 10px;
+    }
+    .modal-btn {
+      flex: 1; height: 48px; border: none;
+      border-radius: 12px; font-size: 15px;
+      font-weight: 600; cursor: pointer;
+      font-family: inherit;
+      transition: opacity 0.15s;
+    }
+    .modal-btn:active { opacity: 0.75; }
+    .modal-btn.cancel { background: #f0f0f0; color: #555; }
+    .modal-btn.confirm { background: #000; color: #fff; }
+    .modal-input {
+      width: 100%; height: 46px;
+      border: 1.5px solid #e0e0e0; border-radius: 10px;
+      padding: 0 14px; font-size: 15px; font-family: inherit;
+      outline: none; margin-bottom: 16px; box-sizing: border-box;
+      transition: border-color 0.15s;
+    }
+    .modal-input:focus { border-color: #000; }
+
+    /* Home bar */
+    .home-bar {
+      height: 34px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .home-indicator {
+      width: 120px;
+      height: 5px;
+      background: #000;
+      border-radius: 3px;
+    }
+
+    /* Hidden form */
+    #w2m-form { display: none; }
+  </style>
+</head>
+<body>
+
+<div class="phone">
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span class="status-time">6:30</span>
+    <div class="status-icons">
+      <!-- Cellular -->
+      <svg width="17" height="12" viewBox="0 0 17 12"><rect x="0" y="6" width="3" height="6"/><rect x="4.5" y="4" width="3" height="8"/><rect x="9" y="2" width="3" height="10"/><rect x="13.5" y="0" width="3" height="12"/></svg>
+      <!-- WiFi -->
+      <svg width="16" height="12" viewBox="0 0 16 12"><path d="M8 9.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm0-3.5a6 6 0 0 1 4.24 1.76l-1.41 1.41A4 4 0 0 0 8 8a4 4 0 0 0-2.83 1.17L3.76 7.76A6 6 0 0 1 8 6zm0-4a9.98 9.98 0 0 1 7.07 2.93l-1.41 1.41A8 8 0 0 0 8 4a8 8 0 0 0-5.66 2.34L.93 4.93A9.98 9.98 0 0 1 8 2z"/></svg>
+      <!-- Battery -->
+      <svg width="25" height="12" viewBox="0 0 25 12"><rect x="0" y="1" width="21" height="10" rx="2" ry="2" stroke="#000" stroke-width="1" fill="none"/><rect x="21.5" y="3.5" width="2" height="5" rx="1" fill="#000"/><rect x="1.5" y="2.5" width="16" height="7" rx="1" fill="#000"/></svg>
+    </div>
+  </div>
+
+  <!-- Chat Header -->
+  <div class="chat-header">
+    <div class="header-back">
+      <svg width="13" height="22" viewBox="0 0 13 22" fill="none">
+        <path d="M11 2L2 11L11 20" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="header-title">
+      <div class="bot-avatar-small">📚</div>
+      <span class="header-name">책책책 📚📚</span>
+      <span class="header-count">3</span>
+    </div>
+    <div class="header-icons">
+      <!-- Search -->
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <circle cx="8.5" cy="8.5" r="5.5" stroke="#000" stroke-width="2"/>
+        <path d="M13 13L17 17" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <!-- Menu -->
+      <svg width="20" height="20" viewBox="0 0 20 20">
+        <circle cx="4" cy="10" r="1.5" fill="#000"/>
+        <circle cx="10" cy="10" r="1.5" fill="#000"/>
+        <circle cx="16" cy="10" r="1.5" fill="#000"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Chat Body -->
+  <div class="chat-body">
+    <!-- Bot Message -->
+    <div class="bot-row">
+      <div class="bot-avatar"><span>📚</span></div>
+      <div class="bot-bubble-wrap">
+        <span class="bot-name">WHEN2READ 챗봇📚</span>
+        <div class="bot-bubble">물론이죠! 아래 캘린더에서 가능한 날짜를 선택해주세요.</div>
+      </div>
+    </div>
+
+    <!-- Calendar -->
+    <div class="calendar-widget" style="margin-left: 49px;">
+      <div class="calendar-inner">
+        <div class="cal-header">
+          <button class="cal-nav" id="prev-btn">‹</button>
+          <span class="cal-title" id="cal-title"></span>
+          <button class="cal-nav" id="next-btn">›</button>
+        </div>
+        <div class="cal-weekdays">
+          <div class="cal-wd">일</div>
+          <div class="cal-wd">월</div>
+          <div class="cal-wd">화</div>
+          <div class="cal-wd">수</div>
+          <div class="cal-wd">목</div>
+          <div class="cal-wd">금</div>
+          <div class="cal-wd">토</div>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+      <div class="selected-count" id="selected-count">날짜를 선택해주세요</div>
+      <button class="confirm-btn" id="confirm-btn">가능한 시간 선택하기</button>
+    </div>
+  </div>
+
+  <!-- Input Area -->
+  <div class="input-area">
+    <div class="input-icon">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+        <circle cx="11" cy="11" r="9" stroke="#999" stroke-width="1.5"/>
+        <path d="M11 7v8M7 11h8" stroke="#999" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <input class="input-box" id="chat-input" type="text" placeholder="날짜 요구사항을 입력하세요 (예: 4월 첫째 주 평일)">
+    <button class="send-btn" id="send-btn">
+      <svg width="14" height="14" viewBox="0 0 14 14"><path d="M1 7h12M7 1l6 6-6 6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+    </button>
+  </div>
+
+  <!-- Home Bar -->
+  <div class="home-bar">
+    <div class="home-indicator"></div>
+  </div>
+
+  <!-- 방 생성 확인 모달 -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+
+      <!-- 패널 A: 이름 입력 -->
+      <div id="modal-panel-name">
+        <div class="modal-title">방 이름을 입력해주세요</div>
+        <input id="modal-name-input" class="modal-input" placeholder="예: WHEN2READ 5월 모임" maxlength="60">
+        <div class="modal-btn-row">
+          <button class="modal-btn cancel" id="modal-cancel-name">취소</button>
+          <button class="modal-btn confirm" id="modal-next">다음 →</button>
+        </div>
+      </div>
+
+      <!-- 패널 B: 최종 확인 -->
+      <div id="modal-panel-confirm" style="display:none">
+        <div class="modal-title" id="modal-confirm-title">📅 방을 만들까요?</div>
+        <div class="modal-dates" id="modal-dates"></div>
+        <div class="modal-btn-row">
+          <button class="modal-btn cancel" id="modal-back">뒤로</button>
+          <button class="modal-btn confirm" id="modal-confirm">방 만들기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const today = new Date();
+  let currentYear = today.getFullYear();
+  let currentMonth = today.getMonth(); // 0-indexed
+  const selectedDates = new Set();
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  function dateStr(y, m, d) {
+    return `${y}-${pad(m + 1)}-${pad(d)}`;
+  }
+
+  function renderCalendar() {
+    const title = document.getElementById('cal-title');
+    const grid = document.getElementById('cal-grid');
+
+    title.textContent = `${currentYear}년 ${currentMonth + 1}월`;
+    grid.innerHTML = '';
+
+    const firstDay = new Date(currentYear, currentMonth, 1).getDay(); // 0=Sun
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate();
+
+    // 이전 달 날짜
+    for (let i = firstDay - 1; i >= 0; i--) {
+      const d = daysInPrevMonth - i;
+      const cell = document.createElement('div');
+      cell.className = 'cal-day other-month';
+      cell.textContent = d;
+      grid.appendChild(cell);
+    }
+
+    // 현재 달 날짜
+    for (let d = 1; d <= daysInMonth; d++) {
+      const ds = dateStr(currentYear, currentMonth, d);
+      const cell = document.createElement('div');
+      cell.className = 'cal-day';
+      if (selectedDates.has(ds)) cell.classList.add('selected');
+      // 오늘 표시
+      if (d === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()) {
+        cell.classList.add('today');
+      }
+      cell.textContent = d;
+      cell.addEventListener('click', () => toggleDate(ds, cell));
+      grid.appendChild(cell);
+    }
+
+    // 다음 달 날짜 (6줄 채우기)
+    const totalCells = firstDay + daysInMonth;
+    const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+    for (let d = 1; d <= remaining; d++) {
+      const cell = document.createElement('div');
+      cell.className = 'cal-day other-month';
+      cell.textContent = d;
+      grid.appendChild(cell);
+    }
+
+    updateCount();
+  }
+
+  function toggleDate(ds, cell) {
+    if (selectedDates.has(ds)) {
+      selectedDates.delete(ds);
+      cell.classList.remove('selected');
+    } else {
+      selectedDates.add(ds);
+      cell.classList.add('selected');
+    }
+    updateCount();
+  }
+
+  function updateCount() {
+    const countEl = document.getElementById('selected-count');
+    const n = selectedDates.size;
+    if (n === 0) {
+      countEl.textContent = '날짜를 선택해주세요';
+    } else {
+      countEl.textContent = `${n}개 날짜 선택됨`;
+    }
+  }
+
+  document.getElementById('prev-btn').addEventListener('click', () => {
+    if (currentMonth === 0) { currentMonth = 11; currentYear--; }
+    else currentMonth--;
+    renderCalendar();
+  });
+
+  document.getElementById('next-btn').addEventListener('click', () => {
+    if (currentMonth === 11) { currentMonth = 0; currentYear++; }
+    else currentMonth++;
+    renderCalendar();
+  });
+
+  document.getElementById('confirm-btn').addEventListener('click', () => {
+    if (selectedDates.size === 0) {
+      alert('날짜를 하나 이상 선택해주세요.');
+      return;
+    }
+    showModal([...selectedDates].sort());
+  });
+
+  renderCalendar();
+
+  // ── 모달 팝업 ─────────────────────────────────────────
+  const modalOverlay    = document.getElementById('modal-overlay');
+  const modalPanelName  = document.getElementById('modal-panel-name');
+  const modalPanelConf  = document.getElementById('modal-panel-confirm');
+  const modalNameInput  = document.getElementById('modal-name-input');
+  const modalConfTitle  = document.getElementById('modal-confirm-title');
+  const modalDates      = document.getElementById('modal-dates');
+  const modalCancelName = document.getElementById('modal-cancel-name');
+  const modalNext       = document.getElementById('modal-next');
+  const modalBack       = document.getElementById('modal-back');
+  const modalConfirm    = document.getElementById('modal-confirm');
+
+  let pendingDates    = [];
+  let pendingRoomName = null;
+  let hadRoomName     = false; // 원문에 이름이 있었으면 뒤로 가도 패널 A 생략
+
+  function datePreview(dates) {
+    const preview = dates.slice(0, 5).map(d => {
+      const [, m, day] = d.split('-');
+      return `${parseInt(m)}월 ${parseInt(day)}일`;
+    }).join(', ');
+    const more = dates.length > 5 ? ` 외 ${dates.length - 5}개` : '';
+    return `${preview}${more}\n총 ${dates.length}개 날짜`;
+  }
+
+  function showNamePanel() {
+    modalNameInput.value = pendingRoomName || '';
+    modalPanelName.style.display = '';
+    modalPanelConf.style.display = 'none';
+    setTimeout(() => modalNameInput.focus(), 100);
+  }
+
+  function showConfirmPanel(name) {
+    modalConfTitle.textContent = `📅 "${name}"으로 방을 만들까요?`;
+    modalDates.textContent = datePreview(pendingDates);
+    // 뒤로 버튼: 원문에 이름이 있었으면 의미 없음 → 취소로 변경
+    modalBack.textContent = hadRoomName ? '취소' : '뒤로';
+    modalPanelName.style.display = 'none';
+    modalPanelConf.style.display = '';
+  }
+
+  function showModal(dates, roomName) {
+    pendingDates = dates;
+    hadRoomName  = !!roomName;
+    if (roomName) {
+      pendingRoomName = roomName;
+      showConfirmPanel(roomName);
+    } else {
+      pendingRoomName = null;
+      showNamePanel();
+    }
+    modalOverlay.classList.add('show');
+  }
+
+  function hideModal() {
+    modalOverlay.classList.remove('show');
+    pendingDates    = [];
+    pendingRoomName = null;
+  }
+
+  // 취소 (패널 A)
+  modalCancelName.addEventListener('click', hideModal);
+
+  // 다음 (패널 A → B)
+  modalNext.addEventListener('click', () => {
+    const name = modalNameInput.value.trim();
+    if (!name) { modalNameInput.focus(); return; }
+    pendingRoomName = name;
+    showConfirmPanel(name);
+  });
+  modalNameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') modalNext.click();
+  });
+
+  // 뒤로 / 취소 (패널 B)
+  modalBack.addEventListener('click', () => {
+    if (hadRoomName) { hideModal(); return; }
+    showNamePanel();
+  });
+
+  // 배경 클릭으로 닫기
+  modalOverlay.addEventListener('click', (e) => {
+    if (e.target === modalOverlay) hideModal();
+  });
+
+  // 방 만들기 (패널 B)
+  modalConfirm.addEventListener('click', async () => {
+    modalConfirm.textContent = '생성 중...';
+    modalConfirm.disabled = true;
+    try {
+      const sorted = [...pendingDates].sort();
+      const res = await fetch('/create-when2meet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventName: pendingRoomName || `WHEN2READ 모임 ${sorted[0]}`,
+          dates: sorted,
+          noEarlierThan: 9,
+          noLaterThan: 18,
+          timeZone: 'Asia/Seoul',
+        }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        hideModal();
+        window.open(data.url, '_blank');
+      } else {
+        alert('오류: ' + (data.error || '방 생성 실패'));
+      }
+    } catch (err) {
+      alert('서버 오류: ' + err.message);
+    } finally {
+      modalConfirm.textContent = '방 만들기';
+      modalConfirm.disabled = false;
+    }
+  });
+
+  // ── 자연어 채팅 기능 ──────────────────────────────────
+
+  const chatBody = document.querySelector('.chat-body');
+  const chatInput = document.getElementById('chat-input');
+  const sendBtn = document.getElementById('send-btn');
+
+  function addUserBubble(text) {
+    const row = document.createElement('div');
+    row.className = 'user-row';
+    row.innerHTML = `<div class="user-bubble">${text}</div>`;
+    chatBody.appendChild(row);
+    chatBody.scrollTop = chatBody.scrollHeight;
+  }
+
+  function addBotBubble(content, isLoading = false) {
+    const row = document.createElement('div');
+    row.className = 'bot-row';
+    row.innerHTML = `
+      <div class="bot-avatar"><span>📚</span></div>
+      <div class="bot-bubble-wrap">
+        <span class="bot-name">WHEN2READ 챗봇📚</span>
+        <div class="bot-bubble">${
+          isLoading
+            ? '<div class="typing-dots"><span></span><span></span><span></span></div>'
+            : content
+        }</div>
+      </div>`;
+    chatBody.appendChild(row);
+    chatBody.scrollTop = chatBody.scrollHeight;
+    return row; // 로딩 버블 교체용으로 반환
+  }
+
+  function selectDates(dates) {
+    selectedDates.clear();
+    dates.forEach(d => selectedDates.add(d));
+    if (dates.length > 0) {
+      const [y, m] = dates[0].split('-');
+      currentYear = parseInt(y);
+      currentMonth = parseInt(m) - 1;
+    }
+    renderCalendar();
+  }
+
+  async function handleSend() {
+    const text = chatInput.value.trim();
+    if (!text) return;
+
+    chatInput.value = '';
+    chatInput.disabled = true;
+    sendBtn.disabled = true;
+
+    addUserBubble(text);
+    const loadingRow = addBotBubble('', true);
+
+    try {
+      const res = await fetch('/extract-dates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userText: text }),
+      });
+      const data = await res.json();
+
+      if (data.dates && data.dates.length > 0) {
+        selectDates(data.dates);
+        const preview = data.dates.slice(0, 3).map(d => {
+          const [, m, day] = d.split('-');
+          return `${parseInt(m)}월 ${parseInt(day)}일`;
+        }).join(', ');
+        const more = data.dates.length > 3 ? ` 외 ${data.dates.length - 3}개` : '';
+        loadingRow.querySelector('.bot-bubble').innerHTML =
+          `${preview}${more}를 캘린더에 선택했어요! 😊`;
+        // 날짜 추출 성공 → 팝업 자동 표시 (roomName 포함)
+        setTimeout(() => showModal(data.dates, data.roomName || null), 400);
+      } else {
+        loadingRow.querySelector('.bot-bubble').textContent =
+          '날짜를 찾지 못했어요. 좀 더 구체적으로 말씀해주세요.';
+      }
+    } catch (err) {
+      loadingRow.querySelector('.bot-bubble').textContent =
+        '오류가 발생했어요: ' + err.message;
+    } finally {
+      chatInput.disabled = false;
+      sendBtn.disabled = false;
+      chatInput.focus();
+    }
+  }
+
+  sendBtn.addEventListener('click', handleSend);
+  chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
+  });
+</script>
+</body>
+</html>
