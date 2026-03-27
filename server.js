@@ -246,7 +246,11 @@ app.post('/extract-dates', async (req, res) => {
   res.json({ dates: [], roomName: null, message: '날짜를 인식하지 못했어요.' });
 });
 
-const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`서버 실행 중: http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`서버 실행 중: http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;
